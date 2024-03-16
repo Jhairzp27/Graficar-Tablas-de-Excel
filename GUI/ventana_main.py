@@ -1,9 +1,11 @@
+# GUI/ventana_main.py
+
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
 import os
 import shutil
-import openpyxl
+from Models.graficas import generar_graficos_desde_excel   # Importa la función desde el módulo graficos.py
 import tkinter.messagebox as tkmb
 
 class VentanaPrincipal:
@@ -78,18 +80,7 @@ class VentanaPrincipal:
         # Diálogo para seleccionar el archivo del cual se desea generar gráficos
         selected_file = filedialog.askopenfilename(initialdir="Data", title="Seleccionar archivo Excel", filetypes=[("Archivos Excel", "*.xlsx"), ("Todos los archivos", "*.*")])
         if selected_file:
-            nombre_archivo = os.path.basename(selected_file)
-            try:
-                wb = openpyxl.load_workbook(selected_file)
-                # Aquí puedes agregar la lógica para generar los gráficos usando Openpyxl y Matplotlib
-                # Por ejemplo:
-                # sheet = wb.active
-                # ...
-                # plt.plot(...)
-                # plt.show()
-                tkmb.showinfo("Éxito", f"Se generaron los gráficos para el archivo '{nombre_archivo}' correctamente.")
-            except Exception as e:
-                tkmb.showerror("Error", f"No se pudieron generar los gráficos para el archivo '{nombre_archivo}'. Detalles del error: {str(e)}")
+            generar_graficos_desde_excel(selected_file)  # Llama a la función para generar los gráficos
 
 def main():
     root = tk.Tk()
