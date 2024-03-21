@@ -3,7 +3,7 @@ from GUI.ventana_main import VentanaPrincipal
 
 def main():
     root = tk.Tk()
-    app = VentanaPrincipal(root)
+    VentanaPrincipal(root)
     root.mainloop()
 
 if __name__ == "__main__":

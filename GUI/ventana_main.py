@@ -1,17 +1,17 @@
-# GUI/ventana_main.py
-
+import os
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
-import os
 import shutil
 from Models.graficas import generar_graficos_desde_excel   # Importa la función desde el módulo graficos.py
-import tkinter.messagebox as tkmb
 
 class VentanaPrincipal:
     def __init__(self, master):
         self.master = master
         self.master.title("Subir Archivo Excel")
+
+        # Crear el directorio 'Data' si no existe
+        self.crear_directorio_data()
 
         # Calcula las dimensiones de la pantalla
         screen_width = master.winfo_screenwidth()
@@ -44,20 +44,35 @@ class VentanaPrincipal:
         # Cargar y mostrar los nombres de archivos en la carpeta "Data"
         self.actualizar_archivos_subidos()
 
+    def crear_directorio_data(self):
+        # Obtener la ruta del directorio 'Data' relativa al directorio del script
+        directorio_actual = os.path.dirname(__file__)
+        directorio_data = os.path.join(directorio_actual, 'Data')
+
+        # Verificar si el directorio 'Data' no existe
+        if not os.path.exists(directorio_data):
+            # Crear el directorio 'Data'
+            os.makedirs(directorio_data)
+            print("Directorio 'Data' creado correctamente.")
+        else:
+            print("El directorio 'Data' ya existe.")
+
     def subir_archivo_excel(self):
         # Diálogo para seleccionar archivo Excel
         filepath = filedialog.askopenfilename(filetypes=[("Archivos Excel", "*.xlsx"), ("Todos los archivos", "*.*")])
         if filepath:
             # Copiar el archivo a la carpeta "Data"
             nombre_archivo = os.path.basename(filepath)
-            shutil.copyfile(filepath, f"Data/{nombre_archivo}")
+            directorio_actual = os.path.dirname(__file__)
+            shutil.copyfile(filepath, os.path.join(directorio_actual, 'Data', nombre_archivo))
             # Actualizar la lista de archivos subidos
             self.actualizar_archivos_subidos()
 
     def eliminar_archivo(self, nombre_archivo):
         try:
             # Eliminar el archivo de la carpeta "Data"
-            os.remove(f"Data/{nombre_archivo}")
+            directorio_actual = os.path.dirname(__file__)
+            os.remove(os.path.join(directorio_actual, 'Data', nombre_archivo))
             # Actualizar la lista de archivos subidos
             self.actualizar_archivos_subidos()
         except FileNotFoundError:
@@ -69,7 +84,8 @@ class VentanaPrincipal:
             widget.destroy()
         self.archivos_subidos.clear()
         # Obtener la lista de archivos en la carpeta "Data"
-        archivos_data = os.listdir("Data")
+        directorio_actual = os.path.dirname(__file__)
+        archivos_data = os.listdir(os.path.join(directorio_actual, 'Data'))
         # Mostrar los nombres de archivos en la ventana principal
         for archivo in archivos_data:
             btn_eliminar = ttk.Button(self.marco_archivos, text=f"Eliminar {archivo}", command=lambda nombre=archivo: self.eliminar_archivo(nombre))
@@ -78,13 +94,13 @@ class VentanaPrincipal:
 
     def generar_graficos(self):
         # Diálogo para seleccionar el archivo del cual se desea generar gráficos
-        selected_file = filedialog.askopenfilename(initialdir="Data", title="Seleccionar archivo Excel", filetypes=[("Archivos Excel", "*.xlsx"), ("Todos los archivos", "*.*")])
+        selected_file = filedialog.askopenfilename(initialdir=os.path.join(os.path.dirname(__file__), 'Data'), title="Seleccionar archivo Excel", filetypes=[("Archivos Excel", "*.xlsx"), ("Todos los archivos", "*.*")])
         if selected_file:
             generar_graficos_desde_excel(selected_file)  # Llama a la función para generar los gráficos
 
 def main():
     root = tk.Tk()
-    app = VentanaPrincipal(root)
+    VentanaPrincipal(root)
     root.mainloop()
 
 if __name__ == "__main__":
