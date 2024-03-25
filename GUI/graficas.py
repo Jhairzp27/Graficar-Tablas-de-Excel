@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from Models.utils import obtener_opciones_desde_excel
+from Utils.utils import obtener_opciones_desde_excel
 from Models.generador_graficos import generar_graficos
 
 def mostrar_opciones_num_unidad(filepath, combo_tipo_unidad, combo_num_unidad, btn_generar_graficos):
