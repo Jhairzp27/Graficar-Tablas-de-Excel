@@ -4,5 +4,6 @@ Este programa va a presentar graficos estadisticos en base a las necesidades del
 
 1.  CREACIÓN DE LA PLANTILLA:
    - Abrir Microsoft Excel y crear una hoja de cálculo nueva (archivo > nuevo).
-   - Darle nombre a la hoja de cálculo, por ejemplo "Planitalla Grafica"
-2. Tratar los datos
+   - Darle nombre a la hoja de cálculo, por ejemplo "Plantilla Grafica"
+2. TRATAR LOS DATOS:
+- En base a un documento excel el programa me da opciones para proceder a graficar lo solicitado.
