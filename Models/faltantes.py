@@ -11,11 +11,11 @@ def generar_grafico_faltantes_anual(filepath, tipo_unidad, num_unidad, ax=None):
 
     # Determinar los rangos de filas y columnas para unidades Grandes y Micros
     if tipo_unidad == "Grandes":
-        rango_filas = (5, 30)
+        rango_filas = (3, 29)
         columna_faltante_anual = 1  # Columna B
         columna_faltante_real_anual = 2   # Columna C
     elif tipo_unidad == "Micros":
-        rango_filas = (31, 65)
+        rango_filas = (29, 63)
         columna_faltante_anual = 1  # Columna B
         columna_faltante_real_anual = 2   # Columna C
     else:
@@ -28,11 +28,15 @@ def generar_grafico_faltantes_anual(filepath, tipo_unidad, num_unidad, ax=None):
         fila_unidad = rango_filas[0] + int(num_unidad[1:]) - 1
         # Seleccionar los valores de las celdas necesarias
         provision = data.iloc[fila_unidad, columna_faltante_anual]
-        promedio = data.iloc[fila_unidad-2, columna_faltante_real_anual]
+        promedio = data.iloc[fila_unidad, columna_faltante_real_anual]
+
+        # Reemplazar NaN con ceros
+        provision = provision if pd.notna(provision) else 0
+        promedio = promedio if pd.notna(promedio) else 0
 
         # Crear el gráfico de barras en el eje proporcionado (o en uno nuevo si no se proporciona)
         if ax is None:
-            ax = plt.subplots()
+            ax = plt.subplots()  # Tamaño de la figura ajustable
         else:
             ax.clear()
 
@@ -41,21 +45,24 @@ def generar_grafico_faltantes_anual(filepath, tipo_unidad, num_unidad, ax=None):
         valores = [provision, promedio]
         custom_colors = ['#FFA500', '#f9e826']
 
-        # Ajustar el ancho de las barras y las posiciones de las barras
-        width = 0.15  # Ancho de las barras
-        positions = np.arange(len(categorias))  # Posiciones de las barras
-        ax.bar(positions, valores, color=custom_colors, width=width)
+        # Ajustar el ancho de la barra
+        bar_width = 0.19  # Ancho de las barras
+
+        # Definir manualmente las posiciones de las barras
+        positions = np.arange(len(categorias))
+
+        ax.bar(positions, valores, color=custom_colors, width=bar_width)
         ax.invert_yaxis()
+
         # Agregar etiquetas de valores a las barras con un pequeño desplazamiento vertical
         for i, valor in enumerate(valores):
-            # Verificar si el valor es finito y numérico antes de agregar el texto
-            if np.isfinite(valor) and np.isreal(valor):
-                ax.text(positions[i], valor, str(round(valor, 2)), ha='center', va='bottom', fontsize=10, color='black')
+            valor_formateado = '{:,.2f}'.format(valor).replace(',', 'X').replace('.', ',').replace('X', '.')
+            ax.text(positions[i], valor, valor_formateado, ha='center', va='bottom', fontsize=10, color='black')
 
-        ax.set_xticks(positions)
+        ax.set_xticks(positions)  # Posiciones de las etiquetas
         ax.set_xticklabels(categorias)  # Etiquetas de las categorías
         ax.set_ylabel('Dólares [$]')
-        ax.set_title(f'Faltantes L-V - Unidad {num_unidad}')
+        ax.set_title(f'Faltantes L-V - Unidad {num_unidad} [$]')
 
         # Ajustar el margen en el eje y para evitar que las etiquetas se superpongan con el borde del gráfico
         ax.margins(y=0.1)

@@ -10,11 +10,11 @@ def generar_grafico_faltantes_findes_anual(filepath, tipo_unidad, num_unidad, ax
 
     # Determinar los rangos de filas y columnas para unidades Grandes y Micros
     if tipo_unidad == "Grandes":
-        rango_filas = (74, 99)
+        rango_filas = (72, 98)
         columna_faltante_anual = 1  # Columna B
         columna_faltante_real_anual = 2   # Columna C
     elif tipo_unidad == "Micros":
-        rango_filas = (100, 137)
+        rango_filas = (98, 135)
         columna_faltante_anual = 1  # Columna B
         columna_faltante_real_anual = 2   # Columna C
     else:
@@ -27,7 +27,7 @@ def generar_grafico_faltantes_findes_anual(filepath, tipo_unidad, num_unidad, ax
         fila_unidad = rango_filas[0] + int(num_unidad[1:]) - 1
         # Seleccionar los valores de las celdas necesarias
         provision = data.iloc[fila_unidad, columna_faltante_anual]
-        promedio = data.iloc[fila_unidad - 2, columna_faltante_real_anual]
+        promedio = data.iloc[fila_unidad, columna_faltante_real_anual]
 
         # Crear el gráfico de barras en el eje proporcionado (o en uno nuevo si no se proporciona)
         if ax is None:
@@ -40,16 +40,17 @@ def generar_grafico_faltantes_findes_anual(filepath, tipo_unidad, num_unidad, ax
         valores = [provision, promedio]
         custom_colors = ['#FFA500', '#f9e826']
 
-        width = 0.6  # Ajusta el ancho de las barras
+        width = 0.19  # Ajusta el ancho de las barras
         ax.bar(categorias, valores, width=width, color=custom_colors)
         ax.invert_yaxis()
         
         # Agregar etiquetas de valores a las barras
         for i, valor in enumerate(valores):
-            ax.text(i, valor, str(round(valor, 2)), ha='center', va='bottom')
+            valor_formateado = '{:,.2f}'.format(valor).replace(',', 'X').replace('.', ',').replace('X', '.')
+            ax.text(i, valor, valor_formateado, ha='center', va='bottom')
 
         ax.set_ylabel('Dólares [$]')
-        ax.set_title(f'Faltantes S-D - Unidad {num_unidad}')
+        ax.set_title(f'Faltantes S-D - Unidad {num_unidad} [$]')
 
         # Añadir un margen en el límite superior del eje y
         ylim = ax.get_ylim()

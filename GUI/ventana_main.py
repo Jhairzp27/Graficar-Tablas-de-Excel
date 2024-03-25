@@ -1,14 +1,17 @@
+import hashlib
 import os
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
 import shutil
+from tkinter import messagebox
 from Models.graficas import generar_graficos_desde_excel   # Importa la función desde el módulo graficos.py
 
 class VentanaPrincipal:
     def __init__(self, master):
+        
         self.master = master
-        self.master.title("Subir Archivo Excel")
+        self.master.title("Análisis de datos mediante Excel")
 
         # Crear el directorio 'Data' si no existe
         self.crear_directorio_data()
@@ -56,17 +59,31 @@ class VentanaPrincipal:
             print("Directorio 'Data' creado correctamente.")
         else:
             print("El directorio 'Data' ya existe.")
-
     def subir_archivo_excel(self):
-        # Diálogo para seleccionar archivo Excel
         filepath = filedialog.askopenfilename(filetypes=[("Archivos Excel", "*.xlsx"), ("Todos los archivos", "*.*")])
         if filepath:
-            # Copiar el archivo a la carpeta "Data"
             nombre_archivo = os.path.basename(filepath)
-            directorio_actual = os.path.dirname(__file__)
-            shutil.copyfile(filepath, os.path.join(directorio_actual, 'Data', nombre_archivo))
-            # Actualizar la lista de archivos subidos
-            self.actualizar_archivos_subidos()
+            directorio_data = os.path.join(os.path.dirname(__file__), 'Data', nombre_archivo)
+            if os.path.exists(directorio_data) and os.path.samefile(filepath, directorio_data):
+                messagebox.showwarning("Archivo Existente", f"El archivo '{nombre_archivo}' ya existe en la carpeta 'Data'. No se puede subir porque es el mismo archivo.")
+            elif os.path.exists(directorio_data):
+                respuesta = messagebox.askyesno("Archivo Existente", f"El archivo '{nombre_archivo}' ya existe en la carpeta 'Data'. ¿Desea reemplazarlo?")
+                if respuesta:
+                    shutil.copyfile(filepath, directorio_data)
+                    self.actualizar_archivos_subidos()
+                    messagebox.showinfo("Archivo Reemplazado", f"El archivo '{nombre_archivo}' se ha reemplazado con éxito en la carpeta 'Data'.")
+            else:
+                shutil.copyfile(filepath, directorio_data)
+                self.actualizar_archivos_subidos()
+                messagebox.showinfo("Archivo Subido", f"El archivo '{nombre_archivo}' se ha subido con éxito a la carpeta 'Data'.")
+
+
+    def calcular_hash(self, filepath):
+        hash_md5 = hashlib.md5()
+        with open(filepath, "rb") as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                hash_md5.update(chunk)
+        return hash_md5.hexdigest()
 
     def eliminar_archivo(self, nombre_archivo):
         try:
@@ -75,6 +92,8 @@ class VentanaPrincipal:
             os.remove(os.path.join(directorio_actual, 'Data', nombre_archivo))
             # Actualizar la lista de archivos subidos
             self.actualizar_archivos_subidos()
+        except PermissionError:
+            messagebox.showwarning("Error al eliminar archivo", f"No se puede eliminar el archivo '{nombre_archivo}' porque está siendo utilizado por otro proceso.")
         except FileNotFoundError:
             pass
 
@@ -102,6 +121,3 @@ def main():
     root = tk.Tk()
     VentanaPrincipal(root)
     root.mainloop()
-
-if __name__ == "__main__":
-    main()
