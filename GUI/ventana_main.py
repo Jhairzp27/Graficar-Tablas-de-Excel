@@ -5,7 +5,7 @@ from tkinter import ttk
 from tkinter import filedialog
 import shutil
 from tkinter import messagebox
-from Models.graficas import generar_graficos_desde_excel   # Importa la función desde el módulo graficos.py
+from GUI.graficas import generar_graficos_desde_excel   # Importa la función desde el módulo graficos.py
 
 class VentanaPrincipal:
     def __init__(self, master):
