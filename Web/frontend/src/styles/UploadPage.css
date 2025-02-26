@@ -1,0 +1,23 @@
+.upload-page {
+    text-align: center;
+    padding: 50px;
+}
+
+input[type="file"] {
+    margin: 20px 0;
+    padding: 10px;
+    border: 1px solid #ccc;
+}
+
+button {
+    background: #4f46e5;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+button:hover {
+    opacity: 0.8;
+}
