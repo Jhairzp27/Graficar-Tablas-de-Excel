@@ -3,3 +3,4 @@ main.spec
 Data
 dist
 main.spec
+.venv
