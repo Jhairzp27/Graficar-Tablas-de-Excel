@@ -34,13 +34,14 @@
     background: var(--button-bg);
     color: var(--button-text);
     border: none;
-    padding: 10px 15px;
+    padding: 8px 12px; /* Ajuste del tamaño */
     cursor: pointer;
-    font-size: 1rem;
+    font-size: 14px; /* Reducir tamaño del texto */
     border-radius: 5px;
-    transition: background 0.3s ease, color 0.3s ease;
+    transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease;
 }
 
 .theme-button:hover {
-    opacity: 0.8;
+    opacity: 0.9;
+    transform: scale(1.05);
 }
