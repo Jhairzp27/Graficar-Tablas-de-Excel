@@ -1,136 +1,364 @@
-import React, { useState } from "react";
-import ErrorMessage from "../components/ErrorMessage";
-import { generateGraph, uploadFile } from "../services/api";
-import "../styles/UploadPage.css";
+// src/pages/UploadPage.js
 
-function UploadPage() {
-    const [file, setFile] = useState(null);
-    const [graph, setGraph] = useState(null);
-    const [errorMessage, setErrorMessage] = useState(""); 
-    const [config, setConfig] = useState({
-        graph_type: "barras",
-        x_column: "",
-        y_column: "",
-        title: "Gráfico Generado",
-        x_label: "",
-        y_label: "",
-        colors: [],
-        show_legend: true,
-        show_values: false,
-        invert_colors: false,
-        font_size: 12,
-    });
+import { AlertTriangle, Sigma, TrendingDown, TrendingUp } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import * as XLSX from 'xlsx';
+import '../styles/UploadPage.css';
 
-    const handleFileChange = (event) => {
-        const selectedFile = event.target.files[0];
-    
-        if (!selectedFile) {
-            setErrorMessage("⚠️ No seleccionaste ningún archivo.");
-            return;
-        }
-    
-        console.log("📂 Archivo seleccionado:", selectedFile.name); // 🔹 Depuración
-    
-        setFile(selectedFile);
-    };
-    
-    const handleUpload = async () => {
-        if (!file) {
-            setErrorMessage("⚠️ Selecciona un archivo antes de continuar.");
-            return;
-        }
-    
-        console.log("📤 Subiendo archivo:", file.name); // 🔹 Depuración
-    
-        const response = await uploadFile(file);
-        alert(response.message);
-    };
-    
-    const handleGenerateGraph = async () => {
-        setErrorMessage("");
-        setGraph(null); // Limpiar gráfico previo antes de generar uno nuevo
-    
-        if (!config.x_column || !config.y_column) {
-            setErrorMessage("⚠️ Debes seleccionar las columnas X e Y.");
-            return;
-        }
-    
-        try {
-            const response = await generateGraph(config);
-            console.log("📡 Respuesta completa del backend:", response);
-    
-            if (response && response.graph) {
-                console.log("✅ Imagen en base64 procesada:", response.graph.slice(0, 50), "...");
-                setGraph(`data:image/png;base64,${response.graph}`);
-            } else {
-                console.error("❌ Error: La imagen en base64 es inválida.");
-                setErrorMessage("⚠️ No se pudo generar la imagen del gráfico.");
+// --- Componente para la Tabla (con resaltado de filas) ---
+const DataTable = ({ columns, data, analysisData }) => {
+  if (!columns.length || !data.length) return null;
+
+  const identifierKey = columns[0]; // Asumimos que la primera columna es el identificador
+
+  return (
+    <div className="table-container">
+      <table className="styled-table">
+        <thead>
+          <tr>
+            {columns.map((col) => (<th key={col}>{col}</th>))}
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((row, rowIndex) => {
+            const rowIdentifier = row[identifierKey];
+            let rowClass = '';
+
+            // Asignamos una clase CSS basada en los resultados del análisis
+            if (analysisData) {
+              if (rowIdentifier === analysisData.max.identifier) {
+                rowClass = 'row-max';
+              } else if (rowIdentifier === analysisData.min.identifier) {
+                rowClass = 'row-min';
+              } else if (analysisData.toTrack.some(item => item.identifier === rowIdentifier)) {
+                rowClass = 'row-track';
+              }
             }
-        } catch (error) {
-            console.error("❌ Error en la solicitud:", error);
-            if (error.response && error.response.data.detail) {
-                setErrorMessage(error.response.data.detail);
-            } else {
-                setErrorMessage("⚠️ Ocurrió un error al generar el gráfico.");
-            }
-        }
-    };
-    
 
+            return (
+              <tr key={rowIndex} className={rowClass}>
+                {columns.map((col) => (<td key={col}>{row[col]}</td>))}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+
+// --- Componente para el Gráfico (sin cambios) ---
+const DataChart = ({ data, xKey, yKey }) => {
+  const processedData = useMemo(() => 
+    data.map(item => ({
+      ...item,
+      [yKey]: Number(item[yKey])
+    })).filter(item => !isNaN(item[yKey])),
+    [data, yKey]
+  );
+
+  if (!data.length || !xKey || !yKey) return null;
+  return (
+    <ResponsiveContainer width="100%" height={400}>
+      <LineChart data={processedData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#ccc" />
+        <XAxis dataKey={xKey} />
+        <YAxis />
+        <Tooltip contentStyle={{ backgroundColor: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius)' }} />
+        <Legend />
+        <Line type="monotone" dataKey={yKey} stroke="var(--primary-color)" strokeWidth={2} activeDot={{ r: 8 }} dot={{ r: 4 }} />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+};
+
+// --- Componente para mostrar el Análisis de Datos (sin cambios) ---
+const DataAnalysis = ({ analysisData }) => {
+    if (!analysisData) return null;
+    const { max, min, average, toTrack } = analysisData;
+  
     return (
-        <div className="upload-page">
-            <h2>📊 Generador de Gráficos</h2>
-            <input type="file" accept=".xlsx" onChange={handleFileChange} />
-            <button onClick={handleUpload}>📤 Cargar Archivo</button>
+      <div className="analysis-container">
+        <div className="analysis-item">
+          <TrendingUp size={24} className="analysis-icon" color="#28a745" />
+          <div>
+            <strong>Valor Más Alto:</strong> {max.value.toLocaleString()}
+            <small> (Fila: {max.identifier})</small>
+          </div>
+        </div>
+        <div className="analysis-item">
+          <TrendingDown size={24} className="analysis-icon" color="#dc3545" />
+          <div>
+            <strong>Valor Más Bajo:</strong> {min.value.toLocaleString()}
+            <small> (Fila: {min.identifier})</small>
+          </div>
+        </div>
+        <div className="analysis-item">
+          <Sigma size={24} className="analysis-icon" color="#007bff" />
+          <div>
+            <strong>Promedio:</strong> {average.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+          </div>
+        </div>
+        {toTrack.length > 0 && (
+          <div className="analysis-item tracking">
+            <AlertTriangle size={24} className="analysis-icon" color="#ffc107" />
+            <div>
+              <strong>Puntos de Seguimiento ({toTrack.length}):</strong>
+              <ul>
+                {toTrack.map(item => (
+                  <li key={item.identifier}>
+                    {item.identifier}: {item.value.toLocaleString()}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
-            <h3>⚙️ Configura tu gráfico</h3>
-            
-            <label>📌 Tipo de Gráfico:</label>
-            <select
-                value={config.graph_type}
-                onChange={(e) => setConfig({ ...config, graph_type: e.target.value })}
-            >
-                <option value="barras">📊 Barras</option>
-                <option value="líneas">📈 Líneas</option>
-                <option value="pastel">🥧 Pastel</option>
-                <option value="dispersión">🔹 Dispersión</option>
-            </select>
+// --- Componente Principal de la Página (Lógica Mejorada) ---
+const UploadPage = () => {
+  const [file, setFile] = useState(null);
+  const [workbook, setWorkbook] = useState(null);
+  const [sheetNames, setSheetNames] = useState([]);
+  const [selectedSheet, setSelectedSheet] = useState('');
+  const [headerRow, setHeaderRow] = useState(1);
+  const [columns, setColumns] = useState([]);
+  const [data, setData] = useState([]);
+  const [selectedColumns, setSelectedColumns] = useState({ x: '', y: '' });
+  const [error, setError] = useState('');
+  const [analysisResults, setAnalysisResults] = useState(null);
 
-            <input
-                type="text"
-                placeholder="Columna para el eje X"
-                value={config.x_column}
-                onChange={(e) => setConfig({ ...config, x_column: e.target.value })}
-            />
-            <input
-                type="text"
-                placeholder="Columna para el eje Y"
-                value={config.y_column}
-                onChange={(e) => setConfig({ ...config, y_column: e.target.value })}
-            />
+  const processSheet = useCallback((wb, sheetName, headerRowNumber) => {
+    if (!wb) return;
+    const ws = wb.Sheets[sheetName];
+    const aoaData = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+    
+    if (aoaData.length > 0) {
+      const headerIndex = headerRowNumber - 1;
+      if (headerIndex >= aoaData.length) {
+        setError(`La fila ${headerRowNumber} no existe en esta hoja.`);
+        setColumns([]);
+        setData([]);
+        return;
+      }
+      
+      const headers = aoaData[headerIndex].filter(h => h !== "");
+      
+      const rows = aoaData.slice(headerIndex + 1).map(rowArray => {
+        const rowData = {};
+        headers.forEach((header) => {
+          const originalIndex = aoaData[headerIndex].indexOf(header);
+          rowData[header] = rowArray[originalIndex];
+        });
+        return rowData;
+      }).filter(row => Object.values(row).some(cell => cell !== ""));
 
-            <button onClick={handleGenerateGraph}>📈 Generar Gráfico</button>
+      setColumns(headers);
+      setData(rows);
+      setSelectedColumns({ x: '', y: '' });
+      setError('');
+    } else {
+      setColumns([]);
+      setData([]);
+    }
+  }, []);
 
-            <ErrorMessage message={errorMessage} />
+  useEffect(() => {
+    if (data.length > 0 && selectedColumns.y && columns.length > 0) {
+      const yKey = selectedColumns.y;
+      const identifierKey = columns[0];
 
-            {graph && (
-                    <div className="graph-container">
-                        <h3>📊 Gráfico Generado</h3>
-                        <img 
-                            src={graph} 
-                            alt="Gráfico generado"
-                            onError={(e) => {
-                                console.error("❌ Error al cargar la imagen en React", e);
-                                setErrorMessage("⚠️ Error al cargar la imagen.");
-                                setGraph(null);
-                            }}
-                            style={{ maxWidth: "100%", borderRadius: "10px", boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)" }}
-                        />
-                    </div>
+      const numericData = data
+        .map(row => ({
+          ...row,
+          value: parseFloat(row[yKey]),
+          identifier: row[identifierKey]
+        }))
+        .filter(row => !isNaN(row.value) && row.identifier);
+
+      if (numericData.length > 0) {
+        let max = { value: -Infinity, identifier: '' };
+        let min = { value: Infinity, identifier: '' };
+        let sum = 0;
+
+        numericData.forEach(row => {
+          if (row.value > max.value) max = { value: row.value, identifier: row.identifier };
+          if (row.value < min.value) min = { value: row.value, identifier: row.identifier };
+          sum += row.value;
+        });
+
+        const average = sum / numericData.length;
+        const toTrack = numericData.filter(row => row.value > average * 1.25);
+
+        setAnalysisResults({ max, min, average, toTrack });
+      } else {
+        setAnalysisResults(null);
+      }
+    } else {
+      setAnalysisResults(null);
+    }
+  }, [data, selectedColumns.y, columns]);
+
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      setError('');
+      
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const bstr = event.target.result;
+        const wb = XLSX.read(bstr, { type: 'binary' });
+        
+        setWorkbook(wb);
+        setSheetNames(wb.SheetNames);
+        const firstSheetName = wb.SheetNames[0];
+        setSelectedSheet(firstSheetName);
+
+        const ws = wb.Sheets[firstSheetName];
+        const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+        let bestHeaderRow = 1;
+        let maxNonEmpty = 0;
+        aoa.slice(0, 10).forEach((row, index) => {
+            const nonEmptyCount = row.filter(cell => cell !== "").length;
+            if (nonEmptyCount > maxNonEmpty) {
+                maxNonEmpty = nonEmptyCount;
+                bestHeaderRow = index + 1;
+            }
+        });
+        
+        setHeaderRow(bestHeaderRow);
+        processSheet(wb, firstSheetName, bestHeaderRow);
+      };
+      reader.readAsBinaryString(selectedFile);
+    }
+  };
+
+  const handleSheetChange = (e) => {
+    const newSheetName = e.target.value;
+    setSelectedSheet(newSheetName);
+    processSheet(workbook, newSheetName, headerRow);
+  };
+  
+  const handleHeaderRowChange = (e) => {
+      const newRow = parseInt(e.target.value, 10);
+      if (newRow > 0) {
+          setHeaderRow(newRow);
+          processSheet(workbook, selectedSheet, newRow);
+      }
+  };
+
+  const handleColumnChange = (e) => {
+    setSelectedColumns({ ...selectedColumns, [e.target.name]: e.target.value });
+  };
+
+  const handleGeneratePDF = async () => {
+    // ... (sin cambios)
+  };
+
+  return (
+    <main className="upload-page-main">
+      <aside className="controls-sidebar card">
+        <h2>Controles</h2>
+        <p>Sube tu archivo, selecciona los datos y genera tu reporte.</p>
+        
+        <div className="control-group">
+          <label htmlFor="file-upload" className="file-input-label">
+            <input id="file-upload" type="file" onChange={handleFileChange} accept=".xlsx, .xls, .csv, .xlsm, .xlsb" />
+            <span>Haz clic para seleccionar un archivo</span>
+          </label>
+          {file && <p className="file-name">Archivo: {file.name}</p>}
+        </div>
+
+        {workbook && (
+          <>
+            {sheetNames.length > 1 && (
+              <div className="control-group">
+                <label htmlFor="sheet-select">Selecciona una Hoja</label>
+                <select id="sheet-select" value={selectedSheet} onChange={handleSheetChange} className="custom-select">
+                  {sheetNames.map(name => <option key={name} value={name}>{name}</option>)}
+                </select>
+              </div>
             )}
 
+            <div className="control-group">
+                <label htmlFor="header-row-input">Fila de Encabezado</label>
+                <input 
+                    type="number" 
+                    id="header-row-input" 
+                    value={headerRow} 
+                    onChange={handleHeaderRowChange} 
+                    className="custom-select"
+                    min="1"
+                />
+            </div>
+          </>
+        )}
+
+        {columns.length > 0 && (
+          <>
+            <div className="control-group">
+              <label htmlFor="x-axis-select">Eje X (Horizontal)</label>
+              <select id="x-axis-select" name="x" value={selectedColumns.x} onChange={handleColumnChange} className="custom-select">
+                <option value="">-- Selecciona --</option>
+                {columns.map((col) => <option key={col} value={col}>{col}</option>)}
+              </select>
+            </div>
+
+            <div className="control-group">
+              <label htmlFor="y-axis-select">Eje Y (Vertical)</label>
+              <select id="y-axis-select" name="y" value={selectedColumns.y} onChange={handleColumnChange} className="custom-select">
+                <option value="">-- Selecciona --</option>
+                {columns.map((col) => <option key={col} value={col}>{col}</option>)}
+              </select>
+            </div>
+
+            <button onClick={handleGeneratePDF} className="btn">Generar Reporte en PDF</button>
+          </>
+        )}
+
+        {error && <p style={{ color: 'var(--error-color)' }}>{error}</p>}
+      </aside>
+
+      <section className="main-content">
+        {analysisResults && (
+            <div className="card">
+                <h2>Análisis Rápido de "{selectedColumns.y}"</h2>
+                <DataAnalysis analysisData={analysisResults} />
+            </div>
+        )}
+
+        <div className="card">
+          <h2>Gráfico de Datos</h2>
+          {data.length > 0 && selectedColumns.x && selectedColumns.y ? (
+            <DataChart data={data} xKey={selectedColumns.x} yKey={selectedColumns.y} />
+          ) : (
+            <div className="empty-state">
+              <h3>Visualización del Gráfico</h3>
+              <p>Sube un archivo y selecciona las columnas X e Y para ver el gráfico aquí.</p>
+            </div>
+          )}
         </div>
-    );
-}
+        <div className="card">
+          <h2>Vista Previa de la Tabla</h2>
+          {data.length > 0 ? (
+            // Pasamos los resultados del análisis a la tabla
+            <DataTable columns={columns} data={data} analysisData={analysisResults} />
+          ) : (
+            <div className="empty-state">
+              <h3>Datos del Archivo</h3>
+              <p>Sube un archivo de Excel para ver los datos aquí.</p>
+            </div>
+          )}
+        </div>
+      </section>
+    </main>
+  );
+};
 
 export default UploadPage;

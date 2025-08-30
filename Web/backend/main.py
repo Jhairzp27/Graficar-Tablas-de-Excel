@@ -1,16 +1,25 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes import upload, graph, export
+import os
 
 app = FastAPI()
 
-# 🔹 Configuración de CORS
+# Obtiene la URL del frontend desde las variables de entorno para producción.
+# Si no la encuentra, usa la de localhost para desarrollo.
+frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+
+origins = [
+    frontend_url,
+]
+
+# Configuración de CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Permitir solo React en local
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],  # Permitir todos los métodos (GET, POST, etc.)
-    allow_headers=["*"],  # Permitir todos los headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Incluir las rutas del backend

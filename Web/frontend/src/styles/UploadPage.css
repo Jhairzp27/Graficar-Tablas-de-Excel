@@ -1,102 +1,248 @@
-.upload-page {
-    text-align: center;
-    padding: 20px;
-    max-width: 600px;
-    margin: auto;
-    background: var(--background-color);
-    border-radius: 12px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.15);
-    transition: background 0.3s ease, color 0.3s ease;
+/* src/styles/UploadPage.css */
+
+.upload-page-main {
+  flex-grow: 1;
+  padding: 2rem;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
-h2 {
-    color: var(--text-color);
-    font-size: 26px;
-    margin-bottom: 15px;
+/* --- TARJETA CON EFECTO GLASSMORPHISM --- */
+.card {
+  /* Efecto de cristal */
+  background: rgba(var(--surface-color-rgb), 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--box-shadow);
+  
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
 }
 
-h3 {
-    color: var(--text-color);
-    font-size: 20px;
-    margin-top: 20px;
+.card:hover {
+  transform: translateY(-5px) scale(1.01);
+  box-shadow: 0 12px 32px 0 rgba(31, 38, 135, 0.15);
 }
 
-input {
-    width: 100%;
-    padding: 12px;
-    margin: 10px 0;
-    border: 2px solid var(--text-color);
-    background: var(--background-color);
-    color: var(--text-color);
-    border-radius: 8px;
-    font-size: 16px;
-    transition: border 0.3s ease, background 0.3s ease, color 0.3s ease;
+.dark .card:hover {
+    box-shadow: 0 12px 32px 0 rgba(0, 0, 0, 0.25);
 }
 
-input::placeholder {
-    color: var(--text-color);
-    opacity: 0.7;
+
+/* --- ESTILOS RESTANTES (SIN CAMBIOS GRANDES) --- */
+.controls-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-button {
-    width: 100%;
-    background: var(--button-bg);
-    color: var(--button-text);
-    border: none;
-    padding: 12px 15px;
-    cursor: pointer;
-    border-radius: 8px;
-    margin-top: 12px;
-    font-size: 16px;
-    font-weight: bold;
-    transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease;
+.controls-sidebar h2 {
+  margin-bottom: 0.5rem;
 }
 
-button:hover {
-    opacity: 0.9;
-    transform: scale(1.05);
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-img {
-    margin-top: 20px;
-    max-width: 100%;
-    border-radius: 10px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-    transition: box-shadow 0.3s ease;
+.control-group label {
+  font-weight: 500;
+  font-size: 0.9rem;
 }
 
-img:hover {
-    box-shadow: 0px 6px 14px rgba(0, 0, 0, 0.2);
+.main-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
-select {
-    width: 100%;
-    padding: 10px;
-    margin: 10px 0;
-    border: 2px solid var(--text-color);
-    background: var(--background-color);
-    color: var(--text-color);
-    border-radius: 8px;
-    font-size: 16px;
-    transition: border 0.3s ease, background 0.3s ease, color 0.3s ease;
+.main-content h2 {
+  margin-bottom: 1rem;
 }
 
-select:focus {
-    outline: none;
-    border-color: #4f46e5;
+.custom-select, .btn {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  font-size: 1rem;
+  box-sizing: border-box;
+  background-color: rgba(var(--surface-color-rgb), 0.5); /* Fondo semi-transparente */
+  color: var(--text-color);
 }
 
-.graph-container {
-    margin-top: 20px;
-    padding: 15px;
-    background: var(--background-color);
-    border-radius: 10px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-    text-align: center;
+.btn {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color var(--transition-speed) ease, transform var(--transition-speed) ease;
 }
 
-.graph-container img {
-    max-width: 100%;
-    border-radius: 10px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+.btn:hover {
+  background-color: var(--primary-color-dark);
 }
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.file-input-label {
+  display: block;
+  padding: 1rem;
+  border: 2px dashed var(--border-color);
+  border-radius: var(--border-radius);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--transition-speed) ease, background-color var(--transition-speed) ease;
+}
+
+.file-input-label:hover {
+  border-color: var(--primary-color);
+  background-color: rgba(var(--primary-color-rgb, 0, 123, 255), 0.1);
+}
+
+.file-input-label input[type="file"] {
+  display: none;
+}
+
+.file-input-label span {
+  color: var(--text-color-secondary);
+}
+
+.file-name {
+  margin-top: 1rem;
+  font-weight: 500;
+  color: var(--success-color);
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+.styled-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9em;
+}
+
+.styled-table thead tr {
+  background-color: transparent;
+  text-align: left;
+}
+
+.styled-table th,
+.styled-table td {
+  padding: 0.75rem 1rem;
+}
+
+.styled-table tbody tr {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.styled-table tbody tr:last-of-type {
+  border-bottom: none;
+}
+
+.styled-table tbody tr:hover {
+  background-color: rgba(var(--surface-color-rgb), 0.2);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  border: 2px dashed var(--border-color);
+  border-radius: var(--border-radius);
+}
+
+.empty-state p {
+  margin-top: 1rem;
+  font-size: 1.1rem;
+}
+
+/* src/styles/UploadPage.css */
+
+/* --- ESTILOS PARA LA TARJETA DE ANÁLISIS --- */
+/* (Añadir al final del archivo) */
+
+.analysis-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.analysis-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: rgba(var(--surface-color-rgb), 0.2);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+}
+
+.analysis-icon {
+  flex-shrink: 0; /* Evita que el icono se encoja */
+}
+
+.analysis-item strong {
+  display: block;
+  font-size: 1rem;
+  color: var(--text-color);
+}
+
+.analysis-item small {
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+}
+
+/* Estilos específicos para la sección de seguimiento */
+.analysis-item.tracking {
+  grid-column: 1 / -1; /* Ocupa todo el ancho */
+  align-items: flex-start;
+}
+
+.analysis-item.tracking ul {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.5rem;
+}
+
+.analysis-item.tracking li {
+  font-size: 0.9rem;
+  background-color: rgba(var(--surface-color-rgb), 0.3);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.styled-table tbody tr.row-max {
+  background-color: rgba(40, 167, 69, 0.2) !important; /* Verde semi-transparente */
+  font-weight: bold;
+}
+
+.styled-table tbody tr.row-min {
+  background-color: rgba(220, 53, 69, 0.2) !important; /* Rojo semi-transparente */
+  font-weight: bold;
+}
+
+.styled-table tbody tr.row-track {
+  background-color: rgba(255, 193, 7, 0.2) !important; /* Amarillo semi-transparente */
+}
+
+/* Mejorar el hover para que no sobreescriba completamente el color de fondo */
+.styled-table tbody tr.row-max:hover,
+.styled-table tbody tr.row-min:hover,
+.styled-table tbody tr.row-track:hover {
+    background-color: rgba(var(--surface-color-rgb), 0.4) !important;
+}
+
